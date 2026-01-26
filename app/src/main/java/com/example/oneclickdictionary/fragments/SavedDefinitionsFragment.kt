@@ -17,6 +17,7 @@ import com.example.oneclickdictionary.R
 import com.example.oneclickdictionary.SavedWordsViewModel
 import com.example.oneclickdictionary.SortOrder
 import com.example.oneclickdictionary.adapters.SavedTranslationsAdapter
+import com.example.oneclickdictionary.receivers.AlarmReceiver
 import com.google.android.material.button.MaterialButton
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -32,6 +33,7 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
     private lateinit var adapter: SavedTranslationsAdapter
     private lateinit var exportButton: MaterialButton
     private lateinit var importButton: MaterialButton
+    private lateinit var testNotificationButton: MaterialButton  // Test button - comment out for production
     private lateinit var sortSpinner: Spinner
 
     private val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -98,6 +100,7 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
         expandableListView = view.findViewById(R.id.savedDefinitionsListView)
         exportButton = view.findViewById(R.id.exportButton)
         importButton = view.findViewById(R.id.importButton)
+        testNotificationButton = view.findViewById(R.id.testNotificationButton)  // Test button - comment out for production
         sortSpinner = view.findViewById(R.id.sortSpinner)
         return view
     }
@@ -127,6 +130,12 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
 
         importButton.setOnClickListener {
             openDocumentLauncher.launch(arrayOf("application/json", "application/*"))
+        }
+
+        // Test button - comment out for production
+        testNotificationButton.setOnClickListener {
+            AlarmReceiver().onReceive(requireContext(), android.content.Intent())
+            Toast.makeText(requireContext(), "Test notification sent", Toast.LENGTH_SHORT).show()
         }
     }
 
