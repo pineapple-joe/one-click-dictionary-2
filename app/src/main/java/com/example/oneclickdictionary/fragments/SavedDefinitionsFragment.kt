@@ -4,7 +4,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.ExpandableListView
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
@@ -12,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.oneclickdictionary.DictionaryDBHelper
 import com.example.oneclickdictionary.R
 import com.example.oneclickdictionary.SavedWordsViewModel
+import com.example.oneclickdictionary.SortOrder
 import com.example.oneclickdictionary.adapters.SavedTranslationsAdapter
 import com.google.android.material.button.MaterialButton
 import org.json.JSONObject
@@ -28,16 +32,17 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
     private lateinit var adapter: SavedTranslationsAdapter
     private lateinit var exportButton: MaterialButton
     private lateinit var importButton: MaterialButton
+    private lateinit var sortSpinner: Spinner
 
     private val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let {
             try {
-                val savedWords = viewModel.savedWords.value ?: mutableMapOf()
+                val savedWords = viewModel.savedWords.value ?: emptyList()
                 val jsonObject = JSONObject()
 
-                for ((word, definitions) in savedWords) {
-                    val definitionsArray = org.json.JSONArray(definitions)
-                    jsonObject.put(word, definitionsArray)
+                for (entry in savedWords) {
+                    val definitionsArray = org.json.JSONArray(entry.definitions)
+                    jsonObject.put(entry.word, definitionsArray)
                 }
 
                 requireContext().contentResolver.openOutputStream(uri)?.use { outputStream ->
@@ -93,6 +98,7 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
         expandableListView = view.findViewById(R.id.savedDefinitionsListView)
         exportButton = view.findViewById(R.id.exportButton)
         importButton = view.findViewById(R.id.importButton)
+        sortSpinner = view.findViewById(R.id.sortSpinner)
         return view
     }
 
@@ -102,13 +108,15 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
         val context = requireContext()
         databaseHelper = DictionaryDBHelper(context)
 
-        adapter = SavedTranslationsAdapter(requireContext(), emptyList(), mutableMapOf(), { word ->
+        adapter = SavedTranslationsAdapter(requireContext(), emptyList()) { word ->
             viewModel.removeWord(word)
-        })
+        }
         expandableListView.setAdapter(adapter)
 
+        setupSortSpinner()
+
         viewModel.savedWords.observe(viewLifecycleOwner) { savedWords ->
-            adapter.updateData(savedWords.keys.toList(), savedWords)
+            adapter.updateData(savedWords)
         }
 
         exportButton.setOnClickListener {
@@ -119,6 +127,24 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
 
         importButton.setOnClickListener {
             openDocumentLauncher.launch(arrayOf("application/json", "application/*"))
+        }
+    }
+
+    private fun setupSortSpinner() {
+        val sortOptions = resources.getStringArray(R.array.sort_options)
+        val spinnerAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, sortOptions)
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        sortSpinner.adapter = spinnerAdapter
+
+        sortSpinner.setSelection(viewModel.getSortOrder().ordinal)
+
+        sortSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val sortOrder = SortOrder.entries[position]
+                viewModel.setSortOrder(sortOrder)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 

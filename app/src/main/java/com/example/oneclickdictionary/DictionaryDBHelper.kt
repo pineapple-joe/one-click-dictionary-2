@@ -14,12 +14,13 @@ class DictionaryDBHelper(private val context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "dictionary.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
         private const val DATABASE_DATA_FILE = "english_dictionary.csv"
         private const val TABLE_DICTIONARY = "dictionary"
         private const val TABLE_MY_WORDS = "words"
         private const val KEY_WORD = "word"
         private const val KEY_DEFINITION = "definition"
+        private const val KEY_TIMESTAMP = "timestamp"
     }
 
     fun createDatabase() {
@@ -84,15 +85,17 @@ class DictionaryDBHelper(private val context: Context) :
 
         db.execSQL(("CREATE INDEX word_index ON $TABLE_DICTIONARY($KEY_WORD)"))
 
-        val createMyWordsTable = (((("CREATE TABLE $TABLE_MY_WORDS").toString() + "("
-                + KEY_WORD) + " TEXT,"
-                + KEY_DEFINITION) + " TEXT" + ")")
+        val createMyWordsTable = "CREATE TABLE $TABLE_MY_WORDS(" +
+                "$KEY_WORD TEXT," +
+                "$KEY_DEFINITION TEXT," +
+                "$KEY_TIMESTAMP INTEGER DEFAULT 0)"
         db.execSQL(createMyWordsTable)
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db?.execSQL("DROP TABLE IF EXISTS " + TABLE_DICTIONARY)
-        onCreate(db)
+        if (oldVersion < 2) {
+            db?.execSQL("ALTER TABLE $TABLE_MY_WORDS ADD COLUMN $KEY_TIMESTAMP INTEGER DEFAULT 0")
+        }
     }
 
     fun getWord(wordToFind: String): MutableList<Word> {
@@ -128,12 +131,14 @@ class DictionaryDBHelper(private val context: Context) :
 
     fun addWord(word: String, definitions: ArrayList<String>) {
         val db = this.writableDatabase
+        val timestamp = System.currentTimeMillis()
         try {
             db.beginTransaction()
             val values = ContentValues()
             for (definition in definitions){
                 values.put(KEY_WORD, word)
                 values.put(KEY_DEFINITION, definition)
+                values.put(KEY_TIMESTAMP, timestamp)
                 db.insert(TABLE_MY_WORDS, null, values)
             }
             db.setTransactionSuccessful()
@@ -149,14 +154,14 @@ class DictionaryDBHelper(private val context: Context) :
         db.close()
     }
 
-    fun getSavedWords(): MutableMap<String, MutableList<String>> {
+    fun getSavedWords(): List<SavedWordEntry> {
         val wordDefinitions = ArrayList<Word>()
         try {
             val db = this.readableDatabase
 
             val cursor = db.query(
                 TABLE_MY_WORDS,
-                arrayOf(KEY_WORD, KEY_DEFINITION),
+                arrayOf(KEY_WORD, KEY_DEFINITION, KEY_TIMESTAMP),
                 null,
                 null,
                 null, null, null, null
@@ -166,7 +171,8 @@ class DictionaryDBHelper(private val context: Context) :
                 while (moveToNext()) {
                     val definition = getString(cursor.getColumnIndexOrThrow(KEY_DEFINITION))
                     val word = getString(cursor.getColumnIndexOrThrow(KEY_WORD))
-                    val savedWord = Word(word, definition)
+                    val timestamp = getLong(cursor.getColumnIndexOrThrow(KEY_TIMESTAMP))
+                    val savedWord = Word(word, definition, timestamp)
                     wordDefinitions.add(savedWord)
                 }
             }
@@ -175,7 +181,16 @@ class DictionaryDBHelper(private val context: Context) :
         catch (e: Exception){
             println("An error occurred while getting word definition: ${e.message}")
         }
-        return wordDefinitions.groupByTo(mutableMapOf(), { it.word }, { it.definition })
+
+        return wordDefinitions
+            .groupBy { it.word }
+            .map { (word, words) ->
+                SavedWordEntry(
+                    word = word,
+                    definitions = words.map { it.definition }.toMutableList(),
+                    timestamp = words.maxOfOrNull { it.timestamp } ?: 0L
+                )
+            }
     }
 
     fun getRandomWord(): Word {

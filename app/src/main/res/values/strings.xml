@@ -3,4 +3,10 @@
     <string name="appwidget_text">Enter word</string>
     <string name="add_widget">Add widget</string>
     <string name="app_widget_description">Get word definition in a click</string>
+
+    <string-array name="sort_options">
+        <item>Time Added</item>
+        <item>Alphabetical</item>
+        <item>Random</item>
+    </string-array>
 </resources>

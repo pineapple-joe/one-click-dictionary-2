@@ -8,25 +8,24 @@ import android.widget.BaseExpandableListAdapter
 import android.widget.ImageView
 import android.widget.TextView
 import com.example.oneclickdictionary.R
+import com.example.oneclickdictionary.SavedWordEntry
 
 class SavedTranslationsAdapter(
     private val context: Context,
-    private var words: List<String>,
-    private var definitions: MutableMap<String, MutableList<String>>,
+    private var savedWords: List<SavedWordEntry>,
     private val onWordRemoved: (String) -> Unit
 ) : BaseExpandableListAdapter() {
 
     override fun getChild(groupPosition: Int, childPosition: Int): String {
-        return definitions[words[groupPosition]]!![childPosition]
+        return savedWords[groupPosition].definitions[childPosition]
     }
 
     override fun getChildId(groupPosition: Int, childPosition: Int): Long {
         return childPosition.toLong()
     }
 
-    fun updateData(newWord: List<String>, newDefinitions: MutableMap<String, MutableList<String>>) {
-        words = newWord
-        definitions = newDefinitions
+    fun updateData(newSavedWords: List<SavedWordEntry>) {
+        savedWords = newSavedWords
         notifyDataSetChanged()
     }
 
@@ -40,15 +39,15 @@ class SavedTranslationsAdapter(
     }
 
     override fun getChildrenCount(groupPosition: Int): Int {
-        return definitions[words[groupPosition]]?.size ?: 0
+        return savedWords[groupPosition].definitions.size
     }
 
     override fun getGroup(groupPosition: Int): String {
-        return words[groupPosition]
+        return savedWords[groupPosition].word
     }
 
     override fun getGroupCount(): Int {
-        return words.size
+        return savedWords.size
     }
 
     override fun getGroupId(groupPosition: Int): Long {

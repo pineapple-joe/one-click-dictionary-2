@@ -10,17 +10,21 @@ import kotlinx.coroutines.launch
 
 class SavedWordsViewModel(application: Application) : AndroidViewModel(application) {
     private val database: DictionaryDBHelper = DictionaryDBHelper(application)
-    private val _savedWords = MutableLiveData<MutableMap<String, MutableList<String>>>()
-    val savedWords: LiveData<MutableMap<String, MutableList<String>>> = _savedWords
+    private val _savedWords = MutableLiveData<List<SavedWordEntry>>()
+    val savedWords: LiveData<List<SavedWordEntry>> = _savedWords
+
+    private var _sortOrder = SortOrder.TIME_ADDED
+    private var unsortedWords: List<SavedWordEntry> = emptyList()
 
     init {
         loadSavedWordsFromDb()
     }
 
     fun addWord(word: String, definitions: MutableList<String>) {
-        val currentMap = _savedWords.value?.toMutableMap() ?: mutableMapOf()
-        currentMap[word] = definitions
-        _savedWords.value = currentMap
+        val currentList = _savedWords.value?.toMutableList() ?: mutableListOf()
+        currentList.add(SavedWordEntry(word, definitions, System.currentTimeMillis()))
+        unsortedWords = currentList
+        _savedWords.value = applySorting(currentList)
     }
 
     fun removeWord(word: String) {
@@ -34,10 +38,26 @@ class SavedWordsViewModel(application: Application) : AndroidViewModel(applicati
         loadSavedWordsFromDb()
     }
 
+    fun setSortOrder(sortOrder: SortOrder) {
+        _sortOrder = sortOrder
+        _savedWords.value = applySorting(unsortedWords)
+    }
+
+    fun getSortOrder(): SortOrder = _sortOrder
+
+    private fun applySorting(words: List<SavedWordEntry>): List<SavedWordEntry> {
+        return when (_sortOrder) {
+            SortOrder.TIME_ADDED -> words.sortedByDescending { it.timestamp }
+            SortOrder.ALPHABETICAL -> words.sortedBy { it.word.lowercase() }
+            SortOrder.RANDOM -> words.shuffled()
+        }
+    }
+
     private fun loadSavedWordsFromDb() {
         CoroutineScope(Dispatchers.IO).launch {
             val wordsFromDb = database.getSavedWords()
-            _savedWords.postValue(wordsFromDb)
+            unsortedWords = wordsFromDb
+            _savedWords.postValue(applySorting(wordsFromDb))
         }
     }
 }
