@@ -113,8 +113,12 @@ class DictionaryFragment : Fragment(R.layout.dictionary_fragment), WordSavedList
         inputBoxLayout = root.findViewById(R.id.outlined_text_input_layout)
         inputBox.addTextChangedListener(textWatcher)
 
-        inputBox.requestFocus()
-        inputBoxLayout.requestFocus()
+        // Focus input and show keyboard when fragment loads
+        inputBox.post {
+            inputBox.requestFocus()
+            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(inputBox, InputMethodManager.SHOW_IMPLICIT)
+        }
 
         constraintLayout = root.findViewById(R.id.constraint_layout)
 
