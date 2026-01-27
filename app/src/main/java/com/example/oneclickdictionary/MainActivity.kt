@@ -34,32 +34,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createAlarm() {
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val intent = Intent(this, AlarmReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        scheduleWordNotification(this, AlarmReceiver.MORNING_ALARM_ID, 9, 0)
+        scheduleWordNotification(this, AlarmReceiver.EVENING_ALARM_ID, 19, 0)
+    }
 
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = System.currentTimeMillis()
-            set(Calendar.HOUR_OF_DAY, 14)
-            set(Calendar.MINUTE, 0)
+    companion object {
+        fun scheduleWordNotification(context: Context, requestCode: Int, hour: Int, minute: Int) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, AlarmReceiver::class.java).apply {
+                putExtra(AlarmReceiver.EXTRA_ALARM_ID, requestCode)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE)
+
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = System.currentTimeMillis()
+                set(Calendar.HOUR_OF_DAY, hour)
+                set(Calendar.MINUTE, minute)
+                set(Calendar.SECOND, 0)
+                if (before(Calendar.getInstance())) {
+                    add(Calendar.DAY_OF_MONTH, 1)
+                }
+            }
+
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
         }
-
-        alarmManager.setAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            pendingIntent
-        )
-// For debugging
-//        val intervalMillis = 60 * 1000L // 1 minute in milliseconds
-//        alarmManager.setRepeating(
-//            AlarmManager.RTC_WAKEUP,
-//            System.currentTimeMillis(),
-//            intervalMillis,
-//            pendingIntent
-//        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        ThemeHelper.applyTheme(ThemeHelper.getThemeMode(this))
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         requestNotificationPermission()

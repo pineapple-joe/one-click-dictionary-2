@@ -16,6 +16,7 @@ import com.example.oneclickdictionary.DictionaryDBHelper
 import com.example.oneclickdictionary.R
 import com.example.oneclickdictionary.SavedWordsViewModel
 import com.example.oneclickdictionary.SortOrder
+import com.example.oneclickdictionary.ThemeHelper
 import com.example.oneclickdictionary.adapters.SavedTranslationsAdapter
 import com.example.oneclickdictionary.receivers.AlarmReceiver
 import com.google.android.material.button.MaterialButton
@@ -33,7 +34,8 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
     private lateinit var adapter: SavedTranslationsAdapter
     private lateinit var exportButton: MaterialButton
     private lateinit var importButton: MaterialButton
-    private lateinit var testNotificationButton: MaterialButton  // Test button - comment out for production
+    // private lateinit var testNotificationButton: MaterialButton  // Test button - comment out for production
+    private lateinit var themeToggleButton: MaterialButton
     private lateinit var sortSpinner: Spinner
 
     private val createDocumentLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -100,7 +102,8 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
         expandableListView = view.findViewById(R.id.savedDefinitionsListView)
         exportButton = view.findViewById(R.id.exportButton)
         importButton = view.findViewById(R.id.importButton)
-        testNotificationButton = view.findViewById(R.id.testNotificationButton)  // Test button - comment out for production
+        // testNotificationButton = view.findViewById(R.id.testNotificationButton)  // Test button - comment out for production
+        themeToggleButton = view.findViewById(R.id.themeToggleButton)
         sortSpinner = view.findViewById(R.id.sortSpinner)
         return view
     }
@@ -133,10 +136,22 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
         }
 
         // Test button - comment out for production
-        testNotificationButton.setOnClickListener {
-            AlarmReceiver().onReceive(requireContext(), android.content.Intent())
-            Toast.makeText(requireContext(), "Test notification sent", Toast.LENGTH_SHORT).show()
+        // testNotificationButton.setOnClickListener {
+        //     AlarmReceiver().onReceive(requireContext(), android.content.Intent())
+        //     Toast.makeText(requireContext(), "Test notification sent", Toast.LENGTH_SHORT).show()
+        // }
+
+        updateThemeIcon()
+        themeToggleButton.setOnClickListener {
+            ThemeHelper.toggleTheme(requireContext())
         }
+    }
+
+    private fun updateThemeIcon() {
+        val isDark = ThemeHelper.isDarkMode(requireContext())
+        themeToggleButton.setIconResource(
+            if (isDark) R.drawable.ic_light_mode else R.drawable.ic_dark_mode
+        )
     }
 
     private fun setupSortSpinner() {

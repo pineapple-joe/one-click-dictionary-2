@@ -9,4 +9,6 @@
         <item>Alphabetical</item>
         <item>Random</item>
     </string-array>
+
+    <string name="toggle_theme">Toggle theme</string>
 </resources>

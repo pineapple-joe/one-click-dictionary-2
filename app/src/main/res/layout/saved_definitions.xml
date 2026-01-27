@@ -33,7 +33,7 @@
             android:text="Import"
             style="@style/Widget.Material3.Button.OutlinedButton" />
 
-        <!-- Test button for daily notification - comment out for production -->
+        <!-- Test button for daily notification - comment out for production
         <com.google.android.material.button.MaterialButton
             android:id="@+id/testNotificationButton"
             android:layout_width="0dp"
@@ -41,7 +41,18 @@
             android:layout_weight="1"
             android:layout_marginStart="4dp"
             android:text="Test"
-            style="@style/Widget.Material3.Button.OutlinedButton" />
+            style="@style/Widget.Material3.Button.OutlinedButton" /> -->
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/themeToggleButton"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:contentDescription="@string/toggle_theme"
+            app:icon="@drawable/ic_dark_mode"
+            app:iconGravity="textStart"
+            app:iconPadding="0dp"
+            style="@style/Widget.Material3.Button.OutlinedButton.Icon" />
     </LinearLayout>
 
     <LinearLayout
