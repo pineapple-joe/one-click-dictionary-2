@@ -81,6 +81,7 @@ class MainActivity : AppCompatActivity() {
             tab.text = when (position) {
                 0 -> "Dictionary"
                 1 -> "Saved"
+                2 -> "Quiz"
                 else -> null
             }
         }.attach()

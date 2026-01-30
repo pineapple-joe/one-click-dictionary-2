@@ -218,4 +218,28 @@ class DictionaryDBHelper(private val context: Context) :
         db.close()
         return randomWord
     }
+
+    fun getRandomDefinitions(count: Int, excludeWord: String): List<String> {
+        val definitions = mutableListOf<String>()
+        val db = this.readableDatabase
+        val cursor = db.query(
+            TABLE_DICTIONARY,
+            arrayOf(KEY_DEFINITION),
+            "$KEY_WORD != ?",
+            arrayOf(excludeWord),
+            null,
+            null,
+            "RANDOM()",
+            count.toString()
+        )
+
+        with(cursor) {
+            while (moveToNext()) {
+                val definition = getString(getColumnIndexOrThrow(KEY_DEFINITION))
+                definitions.add(definition)
+            }
+        }
+        cursor.close()
+        return definitions
+    }
 }
