@@ -6,8 +6,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -27,6 +29,8 @@ class QuizFragment : Fragment(R.layout.quiz_fragment) {
     private lateinit var option2Button: MaterialButton
     private lateinit var option3Button: MaterialButton
     private lateinit var feedbackText: TextView
+    private lateinit var buttonContainer: LinearLayout
+    private lateinit var saveWordButton: MaterialButton
     private lateinit var nextButton: MaterialButton
     private lateinit var errorText: TextView
 
@@ -48,6 +52,8 @@ class QuizFragment : Fragment(R.layout.quiz_fragment) {
         option2Button = view.findViewById(R.id.option2Button)
         option3Button = view.findViewById(R.id.option3Button)
         feedbackText = view.findViewById(R.id.feedbackText)
+        buttonContainer = view.findViewById(R.id.buttonContainer)
+        saveWordButton = view.findViewById(R.id.saveWordButton)
         nextButton = view.findViewById(R.id.nextButton)
         errorText = view.findViewById(R.id.errorText)
 
@@ -67,6 +73,14 @@ class QuizFragment : Fragment(R.layout.quiz_fragment) {
 
         nextButton.setOnClickListener {
             viewModel.loadNewQuestion()
+        }
+
+        saveWordButton.setOnClickListener {
+            if (viewModel.saveCurrentWord()) {
+                Toast.makeText(context, "Word saved", Toast.LENGTH_SHORT).show()
+                saveWordButton.isEnabled = false
+                saveWordButton.text = "Saved"
+            }
         }
 
         viewModel.score.observe(viewLifecycleOwner) { score ->
@@ -92,7 +106,7 @@ class QuizFragment : Fragment(R.layout.quiz_fragment) {
         wordText.visibility = View.GONE
         optionsContainer.visibility = View.GONE
         feedbackText.visibility = View.GONE
-        nextButton.visibility = View.GONE
+        buttonContainer.visibility = View.GONE
         errorText.visibility = View.GONE
     }
 
@@ -101,7 +115,7 @@ class QuizFragment : Fragment(R.layout.quiz_fragment) {
         wordText.visibility = View.VISIBLE
         optionsContainer.visibility = View.VISIBLE
         feedbackText.visibility = View.GONE
-        nextButton.visibility = View.GONE
+        buttonContainer.visibility = View.GONE
         errorText.visibility = View.GONE
 
         wordText.text = state.word
@@ -119,8 +133,13 @@ class QuizFragment : Fragment(R.layout.quiz_fragment) {
         wordText.visibility = View.VISIBLE
         optionsContainer.visibility = View.VISIBLE
         feedbackText.visibility = View.VISIBLE
-        nextButton.visibility = View.VISIBLE
+        buttonContainer.visibility = View.VISIBLE
         errorText.visibility = View.GONE
+
+        // Reset save button state
+        saveWordButton.visibility = View.VISIBLE
+        saveWordButton.isEnabled = true
+        saveWordButton.text = "Save Word"
 
         optionButtons.forEach { it.isEnabled = false }
 
@@ -153,7 +172,8 @@ class QuizFragment : Fragment(R.layout.quiz_fragment) {
         wordText.visibility = View.GONE
         optionsContainer.visibility = View.GONE
         feedbackText.visibility = View.GONE
-        nextButton.visibility = View.VISIBLE
+        buttonContainer.visibility = View.VISIBLE
+        saveWordButton.visibility = View.GONE
         errorText.visibility = View.VISIBLE
         errorText.text = message
     }

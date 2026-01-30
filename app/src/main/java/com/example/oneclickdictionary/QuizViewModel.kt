@@ -94,4 +94,14 @@ class QuizViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
     }
+
+    fun saveCurrentWord(): Boolean {
+        val currentState = _quizState.value
+        if (currentState is QuizState.AnswerResult) {
+            val definitions = arrayListOf(currentState.correctDefinition)
+            database.addWord(currentState.word, definitions)
+            return true
+        }
+        return false
+    }
 }
