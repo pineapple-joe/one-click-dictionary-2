@@ -29,6 +29,7 @@
 
         <receiver android:name=".receivers.AlarmReceiver" />
         <receiver android:name=".receivers.SaveWordReceiver" />
+        <receiver android:name=".receivers.QuizAlarmReceiver" />
         <receiver
             android:name=".receivers.BootReceiver"
             android:exported="true">
