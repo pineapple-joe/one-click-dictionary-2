@@ -147,6 +147,11 @@ class SavedDefinitionsFragment : Fragment(R.layout.saved_definitions) {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.loadSavedWords()
+    }
+
     private fun updateThemeIcon() {
         val isDark = ThemeHelper.isDarkMode(requireContext())
         themeToggleButton.setIconResource(
